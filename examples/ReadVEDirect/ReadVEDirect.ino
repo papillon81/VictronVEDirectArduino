@@ -13,51 +13,53 @@
 #include "Arduino.h"
 #include "VEDirect.h"
 
-// 32 bit ints to collect the data from the device
-int32_t VE_soc, VE_power, VE_voltage, VE_current;
-// Boolean to collect an ON/OFF value
-uint8_t VE_alarm;
+VEDirect MPPT(Serial1);
 
-// VEDirect instantiated with relevant serial object
-VEDirect myve(Serial3);
+float MainBatteryVoltage = 0.f;
+float PanelVoltage = 0.f;
+float PanelPower = 0.f;
+float BatteryCurrent = 0.f;
+float LoadCurrent = 0.f;
 
-void setup() {
-	Serial.begin(9600);		// Adjust as needed
+
+void setup()
+{
+	Serial.begin(19200);
+
+	Serial.print("MPPT connection... ");
+	if(MPPT.begin())
+		Serial.println("OK");
+	else
+	{
+		Serial.println("Failed");
+		delay(10000);
+		setup();
+	}
 }
 
-void loop() {
-	Serial.println("Reading values from Victron Energy device using VE.Direct text mode");
-	Serial.println();
 
-	// Read the data
-	if(myve.begin()) {									// test connection
-		VE_soc = myve.read(VE_SOC);
-		VE_power = myve.read(VE_POWER);
-		VE_voltage = myve.read(VE_VOLTAGE);
-		VE_current = myve.read(VE_CURRENT);
-		VE_alarm = myve.read(VE_ALARM);
-	} else {
-		Serial.println("Could not open serial port to VE device");
-		while (1);
+void loop()
+{
+
+	MPPT.update();
+
+	if(MPPT.available())
+	{
+		MainBatteryVoltage = MPPT.read(VE_VOLTAGE)*0.001;
+		PanelVoltage = MPPT.read(VE_PANEL_VOLTAGE)*0.001;
+		PanelPower = MPPT.read(VE_PANEL_POWER);
+		BatteryCurrent =MPPT.read(VE_CURRENT)*0.001;
+		LoadCurrent = MPPT.read(VE_BATTERY_LOAD_CURRENT)*0.001;
+
+		Serial.println("#####");
+		Serial.print("Battery : "); Serial.print(MainBatteryVoltage, 2); Serial.println(" V");
+		Serial.print("Panel : "); Serial.print(PanelVoltage, 2); Serial.println(" V");
+		Serial.print("Panel : "); Serial.print(PanelPower, 2); Serial.println(" W");
+		Serial.print("Battery Current : "); Serial.print(BatteryCurrent, 2); Serial.println(" A");
+		Serial.print("Load : "); Serial.print(LoadCurrent, 2); Serial.println(" A");
+		Serial.println("#####"); Serial.println();
+
 	}
 
-	// Print each of the values
-	Serial.print("State of Charge (SOC): ");
-	Serial.println(VE_soc, DEC);
-	Serial.print("Power:                 ");
-	Serial.println(VE_power, DEC);
-	Serial.print("Voltage                ");
-	Serial.println(VE_voltage, DEC);
-	Serial.print("Current                ");
-	Serial.println(VE_current, DEC);
-	Serial.print("Alarm                  ");
-	Serial.println(VE_alarm, DEC);
-	Serial.println();
-
-	// Copy the raw data stream (minus the \r) to Serial0
-	// Call read() with a token that won't match any VE.Direct labels
-	Serial.println("All data from device:");
-	myve.read(VE_DUMP);
-	Serial.println();
-	delay(10000);
+	delay(10);
 }
