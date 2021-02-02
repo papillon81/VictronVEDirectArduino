@@ -1,8 +1,8 @@
 /******************************************************************
  VEDirect Arduino
 
- Copyright 2018, 2019, Brendan McLearie
- Distributed under MIT license - see LICENSE.txt
+ Forked from Brendan McLearie VEDirect work
+ Modified by Théo Hyvon
 
  See README.md
 
@@ -10,11 +10,16 @@
  - Class / enums / API
 
  Updates:
+ - 2021-01-29:
+	- Changing reading method to a non-blocking approach based on state machine presented on VE FAQ
+	 --> https://www.victronenergy.com/live/vedirect_protocol:faq#framehandler_reference_implementation
+
+	- Adding MPPT and Phoenix labels
  - 2019-07-14:
-  	  - Rewrite of read - cleaner.
-  	  - Target labels extendible with enum and PROGMEM strings
-  	  - Retired copy_raw_to_serial0() code - use VE_DUMP on read
-  	  - Added some tunable parameters see #defines
+	- Rewrite of read - cleaner.
+	- Target labels extendible with enum and PROGMEM strings
+	- Retired copy_raw_to_serial0() code - use VE_DUMP on read
+	- Added some tunable parameters see #defines
 ******************************************************************/
 
 #ifndef VEDIRECT_H_
@@ -67,7 +72,7 @@ enum VE_DIRECT_DATA {
 	VE_LAST_LABEL
 };
 
-const char ved_labels[VE_LAST_LABEL][VED_MAX_LABEL_SIZE] PROGMEM = {
+const char ved_labels[VE_LAST_LABEL][VED_MAX_LABEL_SIZE] = {
 		"Dump",	// a string that won't match any label
 		"SOC",
 		"V",
@@ -83,6 +88,7 @@ const char ved_labels[VE_LAST_LABEL][VED_MAX_LABEL_SIZE] PROGMEM = {
 		"H19",
 		"H20",
 		"H21",
+		"H22",
 		"H23",
 		"ERR",
 		"CS",
@@ -100,10 +106,8 @@ class VEDirect
 {
 	public:
 		VEDirect(HardwareSerial& port);
-		virtual ~VEDirect();
 		uint8_t begin();
 		void update();
-
 		int32_t read(uint8_t Label);
 
 		bool available();

@@ -1,7 +1,9 @@
 /******************************************************************
  VEDirect Arduino
 
- Copyright 2018, 2019, Brendan McLearie
+ Forked from Brendan McLearie VEDirect work
+ Modified by Théo Hyvon
+
  Distributed under MIT license - see LICENSE.txt
 
  See README.md
@@ -9,7 +11,7 @@
  File: VEDirect.cpp
  - Implementation
  Updates:
- - 2019-07-14 See VEDirect.h
+ - 2021-01-29 See VEDirect.h
 ******************************************************************/
 
 #include "VEDirect.h"
@@ -36,9 +38,10 @@ uint8_t VEDirect::begin()
 		if(mVESerial.available())
 		{
 			mVESerial.flush();
-			mVESerial.end();
 			return 1;
 		}
+
+		return 0;
 	}
 	return 0;
 }
@@ -78,11 +81,13 @@ int32_t VEDirect::read(uint8_t Label)
 
 void VEDirect::update()
 {
+
 	while(mVESerial.available())
 	{
 		uint8_t inbyte = mVESerial.read();
 
-		inbyte = toupper(inbyte);
+		if(inbyte == ':')
+			mState = Idle;
 
 		switch(mState)
 		{
@@ -119,6 +124,7 @@ void VEDirect::update()
 
 							for(uint8_t i = 0; i < VE_LAST_LABEL; i++)
 							{
+
 								if (strcmp(mRX_Buffer, ved_labels[i]) == 0)
 								{
 									mCurrentLabel = i;
@@ -129,13 +135,24 @@ void VEDirect::update()
 							if(mCurrentLabel == VE_CHECKSUM) // If label is checksum change state to checksum verification
 								mState = Checksum;
 							else if(mCurrentLabel == VE_LAST_LABEL) // Label hasn't been found, going back to Idle State
+							{
 								mState = Idle;
+								Serial.println("##### Framing Error : Unknown label #####");
+							}
+
 							else
+							{
 								mState = Rec_Value;
+								mRX_Pointer = 0;
+							}
+
 						}
 
 						else	// Buffer overflow going back to Idle
+						{
 							mState = Idle;
+							Serial.println("##### Framing Error : Overflow Tab #####");
+						}
 
 						break;
 
@@ -147,7 +164,13 @@ void VEDirect::update()
 							mRX_Pointer++;
 						}
 						else	// Buffer overflow going back to Idle
+						{
 							mState = Idle;
+							Serial.println("##### Framing Error : Overflow Name #####");
+							Serial.println("Dump : ");
+							Serial.println(mRX_Buffer);
+							Serial.println("#####");
+						}
 
 						break;
 				}
@@ -161,7 +184,7 @@ void VEDirect::update()
 						// forward record
 						if (mRX_Pointer < VED_MAX_VALUE_SIZE)
 						{
-							*mRX_Buffer = 0; // make zero ended
+							mRX_Buffer[mRX_Pointer] = 0; // make zero ended
 
 							if(mCurrentLabel < VE_LAST_LABEL)	// Is selected Label correct ?
 							{
@@ -181,22 +204,25 @@ void VEDirect::update()
 						{
 							mRX_Buffer[mRX_Pointer] = inbyte;
 							mRX_Pointer++;
+
 						}
 						else	// Buffer overflow going back to Idle
+						{
 							mState = Idle;
+							Serial.println("##### Framing Error : Overflow Value #####");
+						}
 						break;
 				}
 				break;
 
 			case Checksum:
-				bool valid = mChecksum == 0;
 				mChecksum = 0;
 				mState = Idle;
 				mNewData = true;
+
 				break;
 		}
 	}
 
-	//mVESerial.
 }
 
