@@ -1,13 +1,15 @@
 /******************************************************************
  VEDirect Arduino
 
- Copyright 2018, 2019, Brendan McLearie
- Distributed under MIT license - see LICENSE.txt
+ Forked from Brendan McLearie VEDirect work
+ 
+ Modified by Théo Hyvon to implement State machine as example described here :
+ https://www.victronenergy.com/live/vedirect_protocol:faq
+ Don't support checksum computation
 
- See README.md
 
  File: ReadVEDirect.ino / ReadVEDirect.cpp
- - Provides example use of the VEDirect library
+ - Provides example use of the VEDirect library for Arduino Mega
 ******************************************************************/
 
 #include "Arduino.h"
@@ -48,7 +50,7 @@ void loop()
 		MainBatteryVoltage = MPPT.read(VE_VOLTAGE)*0.001;
 		PanelVoltage = MPPT.read(VE_PANEL_VOLTAGE)*0.001;
 		PanelPower = MPPT.read(VE_PANEL_POWER);
-		BatteryCurrent =MPPT.read(VE_CURRENT)*0.001;
+		BatteryCurrent = MPPT.read(VE_CURRENT)*0.001;
 		LoadCurrent = MPPT.read(VE_BATTERY_LOAD_CURRENT)*0.001;
 
 		Serial.println("#####");

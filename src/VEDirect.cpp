@@ -4,14 +4,22 @@
  Forked from Brendan McLearie VEDirect work
  Modified by Théo Hyvon
 
- Distributed under MIT license - see LICENSE.txt
-
  See README.md
 
  File: VEDirect.cpp
- - Implementation
+ - Class / enums / API
+
  Updates:
- - 2021-01-29 See VEDirect.h
+ - 2021-01-29:
+	- Changing reading method to a non-blocking approach based on state machine presented on VE FAQ
+	 --> https://www.victronenergy.com/live/vedirect_protocol:faq#framehandler_reference_implementation
+
+	- Adding MPPT and Phoenix labels
+ - 2019-07-14:
+	- Rewrite of read - cleaner.
+	- Target labels extendible with enum and PROGMEM strings
+	- Retired copy_raw_to_serial0() code - use VE_DUMP on read
+	- Added some tunable parameters see #defines
 ******************************************************************/
 
 #include "VEDirect.h"
