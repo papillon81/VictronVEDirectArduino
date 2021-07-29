@@ -36,10 +36,10 @@ VEDirect::VEDirect(HardwareSerial& port): mVESerial(port)
 	mNewData = false;
 }
 
-uint8_t VEDirect::begin()
+uint8_t VEDirect::begin(uint8_t rxPin, uint8_t txPin)
 {
 	// Check connection with the serial port
-	mVESerial.begin(VED_BAUD_RATE);
+	mVESerial.begin(VED_BAUD_RATE, SERIAL_8N1, rxPin, txPin);
 	if (mVESerial)
 	{
 		delay(1500);

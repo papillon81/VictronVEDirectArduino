@@ -106,7 +106,7 @@ class VEDirect
 {
 	public:
 		VEDirect(HardwareSerial& port);
-		uint8_t begin();
+		uint8_t begin(uint8_t rxPin = -1, uint8_t txPin = -1);
 		void update();
 		int32_t read(uint8_t Label);
 
